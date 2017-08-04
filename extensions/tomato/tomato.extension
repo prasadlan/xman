@@ -1,0 +1,26 @@
+<?php
+/**
+ * @file
+ * Extension file. 
+ */
+
+/**
+ * Implements hook_redcap_data_entry_form_top().
+ */
+function tomato_redcap_data_entry_form_top($project_id, $record, $instrument, $event_id, $group_id) {
+    print '<script>alert(\'Do you like tomato?\');</script>';
+}
+
+/**
+ * Implements hook_xman_plugins().
+ */
+function tomato_xman_plugins() {
+    return array('Tomato.php' => 'tomato_page');
+}
+
+/**
+ * Tomato page callback.
+ */
+function tomato_page() {
+    print 'Do you like tomato?';
+}

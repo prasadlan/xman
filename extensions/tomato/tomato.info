@@ -1,0 +1,7 @@
+{
+    "name": "Tomato",
+    "description": "Asks if you like tomato before any data entry.",
+    "version": "1.0",
+    "global": 1,
+    "authors": "Tiago Bember <tbembersimeao@ufl.edu>"
+}
