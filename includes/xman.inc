@@ -25,19 +25,127 @@ function xman_get_pages() {
  */
 function xman_set_control_center_item() {
     print '<div id ="xman-menu-item-wrapper" style="display:none"><img src="' . APP_PATH_IMAGES . 'brick.png">&nbsp; <a href="' . APP_PATH_WEBROOT . 'ControlCenter/xman.php"> Extensions Manager (XMan)</a><br/></div>';
-    print '<script src="' . APP_PATH_WEBROOT_PARENT . 'xman/js/control-center.js' . '"></script>';
+    print '<script src="' . APP_PATH_WEBROOT_PARENT . 'xman/js/xman-menu.js' . '"></script>';
 }
 
 /**
  * Loads all enabled extensions.
  */
-function xman_load_extensions($project_id = null) {
+function xman_load_extensions($project_id = null, $type = 'extension') {
     foreach (xman_get_enabled_extensions($project_id) as $name => $extension) {
-        $path = APP_PATH_EXTENSIONS . $name . '/' . $name . '.extension';
+        $path = APP_PATH_EXTENSIONS . $name . '/' . $name . '.' . $type;
         if (file_exists($path)) {
             require_once $path;
         }
     }
+}
+
+/**
+ * Updates all enabled extensions.
+ */
+function xman_update_all() {
+    try {
+        foreach (xman_get_available_updates() as $name => $updates) {
+            xman_update_extension($name, $updates);
+        }
+    }
+    catch (Exception $e) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Updates a given extension.
+ */
+function xman_update_extension($extension_name, $updates = null) {
+    try {
+        if (!$updates) {
+            $updates = xman_get_available_updates();
+            if (!isset($updates[$extension_name])) {
+                return true;
+            }
+
+            $updates = $updates[$extension_name];
+        }
+
+        $last_version = 0;
+        foreach ($updates as $version) {
+            $function = $extension_name . '_xman_update_' . $version;
+            if (function_exists($function)) {
+                $function();
+                $last_version = $version;
+            }
+        }
+
+        if ($last_version) {
+            db_query('UPDATE redcap_extensions SET schema_version = ' . $version . ' WHERE name = "' . db_escape($extension_name) . '"');
+        }
+    }
+    catch (Exception $e) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Gets available updates from enabled modules.
+ *
+ * Based on https://api.drupal.org/api/drupal/includes%21install.inc/function/drupal_get_schema_versions/7.x.
+ */
+function xman_get_available_updates() {
+    $updates = array();
+    if (!$extensions = xman_get_enabled_extensions()) {
+        return $updates;
+    }
+
+    // Load install files.
+    xman_load_extensions(null, 'install');
+
+    // Prepare regular expression to match all possible defined hook_xman_update_N().
+    $regexp = '/^(?P<extension>.+)_xman_update_(?P<version>\d+)$/';
+    $functions = get_defined_functions();
+
+    // Narrow this down to functions ending with an integer, since all
+    // hook_xman_update_N() functions end this way, and there are other
+    // possible functions which match '_xman_update_'. We use preg_grep() here
+    // instead of foreaching through all defined functions, since the loop
+    // through all PHP functions can take significant page execution time.
+    foreach (preg_grep('/_\d+$/', $functions['user']) as $function) {
+        // If this function is an extension update function, add it to the list of
+        // extension updates.
+        if (preg_match($regexp, $function, $matches) && isset($extensions[$matches['extension']])) {
+            if (!isset($extensions[$matches['extension']]['updates'])) {
+                $extensions[$matches['extension']]['updates'] = array();
+            }
+
+            $extensions[$matches['extension']]['updates'][] = $matches['version'];
+        }
+    }
+
+    foreach ($extensions as $name => $extension) {
+        if (!isset($extension['updates'])) {
+            continue;
+        }
+
+        // Ensure that updates are applied in numerical order.
+        sort($extension['updates'], SORT_NUMERIC);
+
+        $versions = array();
+        foreach ($extension['updates'] as $version) {
+            if ($extension['schema_version'] < $version) {
+                $versions[] = $version;
+            }
+        }
+
+        if ($versions) {
+            $updates[$name] = $versions;
+        }
+    }
+
+    return $updates;
 }
 
 /**
