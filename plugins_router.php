@@ -8,13 +8,13 @@
  *
  *   /redcap/xman/plugins_router.php?q=<PLUGIN_PATH>
  *
- * However, the plugins can be accessed directly (see .htaccess file to see how
- * this path rewrite works):
+ * However, it is possible - and recommended - to access the plugins directly
+ * by its path alias (see .htaccess file to check how this path rewrite works):
  *   /redcap/<PLUGIN_PATH>
  *
  * The router checks if some extension has implemented a page callback for
  * <PLUGIN_PATH> (see Plugins section on README to see how an extension can
- * declare a new plugin). If so, the function is called and the plugin page is
+ * create a plugin). If so, the function is called and the plugin page is
  * finally rendered.
  */
 

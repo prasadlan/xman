@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Basic functions for XMan.
+ * XMan API file.
  */
 
 define('APP_PATH_EXTENSIONS', APP_PATH_DOCROOT . '../xman/extensions/');
@@ -9,6 +9,9 @@ include_once 'admin.inc';
 
 /**
  * Gets all available XMan plugins().
+ *
+ * @return array $pages
+ *   An array of pages callbacks, keyed by page path.
  */
 function xman_get_pages() {
     global $redcap_version;
@@ -30,6 +33,12 @@ function xman_set_control_center_item() {
 
 /**
  * Loads all enabled extensions.
+ *
+ * @param int $project_id
+ *   The project ID to look up.
+ * @param string $type
+ *   The file type to include. Defaults to 'extension', which is the main
+ *   extension file.
  */
 function xman_load_extensions($project_id = null, $type = 'extension') {
     foreach (xman_get_enabled_extensions($project_id) as $name => $extension) {
@@ -41,16 +50,57 @@ function xman_load_extensions($project_id = null, $type = 'extension') {
 }
 
 /**
- * Updates all enabled extensions.
+ * Enables a extension.
+ *
+ * @param string $name.
+ *   The extension machine name to disable.
  */
-function xman_update_all() {
-    try {
-        foreach (xman_get_available_updates() as $name => $updates) {
-            xman_update_extension($name, $updates);
+function xman_enable_extension($name) {
+    db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "[]")');
+    $updates = xman_get_available_updates();
+
+    $function = $name . '_xman_enable';
+    if (function_exists($function)) {
+        // Invoking enable hook.
+        $function();
+    }
+
+    if (isset($updates[$name])) {
+        db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
+    }
+}
+
+/**
+ * Disables extensions.
+ *
+ * @param array $names.
+ *   An array of extensions machine names to disable.
+ */
+function xman_disable_extensions($names) {
+    xman_load_extensions(null, 'install');
+
+    foreach ($names as $name) {
+        $function = $name . '_xman_disable';
+        if (function_exists($function)) {
+            // Invoking disable hook.
+            $function();
         }
     }
-    catch (Exception $e) {
-        return false;
+
+    db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $names) . '")');
+}
+
+/**
+ * Updates all enabled extensions.
+ *
+ * @return bool
+ *   TRUE if success, FALSE otherwise.
+ */
+function xman_update_all() {
+    foreach (xman_get_available_updates() as $name => $updates) {
+        if (!xman_update_extension($name, $updates)) {
+            return false;
+        }
     }
 
     return true;
@@ -58,29 +108,33 @@ function xman_update_all() {
 
 /**
  * Updates a given extension.
+ *
+ * @param string $name
+ *   The extension machine name to be udpated.
+ * @param array $updates
+ *   (optional) An array of updates IDs to run. If ommited, all available
+ *   updates will be executed.
+ *
+ * @return bool
+ *   TRUE if success, FALSE otherwise.
  */
-function xman_update_extension($extension_name, $updates = null) {
+function xman_update_extension($name, $updates = null) {
     try {
         if (!$updates) {
             $updates = xman_get_available_updates();
-            if (!isset($updates[$extension_name])) {
+            if (!isset($updates[$name])) {
                 return true;
             }
 
-            $updates = $updates[$extension_name];
+            $updates = $updates[$name];
         }
 
-        $last_version = 0;
         foreach ($updates as $version) {
-            $function = $extension_name . '_xman_update_' . $version;
+            $function = $name . '_xman_update_' . $version;
             if (function_exists($function)) {
                 $function();
-                $last_version = $version;
+                db_query('UPDATE redcap_extensions SET schema_version = ' . $version . ' WHERE name = "' . $name . '"');
             }
-        }
-
-        if ($last_version) {
-            db_query('UPDATE redcap_extensions SET schema_version = ' . $version . ' WHERE name = "' . db_escape($extension_name) . '"');
         }
     }
     catch (Exception $e) {
@@ -94,6 +148,10 @@ function xman_update_extension($extension_name, $updates = null) {
  * Gets available updates from enabled modules.
  *
  * Based on https://api.drupal.org/api/drupal/includes%21install.inc/function/drupal_get_schema_versions/7.x.
+ *
+ * @return array $updates
+ *   An array of items, keyed by extension machine name. Each item is an array
+ *   of updates descriptions, keyed by the update version number.
  */
 function xman_get_available_updates() {
     $updates = array();
@@ -136,7 +194,8 @@ function xman_get_available_updates() {
         $versions = array();
         foreach ($extension['updates'] as $version) {
             if ($extension['schema_version'] < $version) {
-                $versions[] = $version;
+                $function = new ReflectionFunction($name . '_xman_update_' . $version);
+                $versions[$version] = trim(str_replace(array("\n", '*', '/'), '', $function->getDocComment()));
             }
         }
 

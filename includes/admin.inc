@@ -14,45 +14,44 @@ function xman_control_center_page() {
     $extensions = xman_get_extensions();
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $class = 'darkgreen';
+        $icon = 'tick';
+
         if ($_POST['form_type'] == 'save') {
             $to_del = array();
             foreach ($extensions as $name => $extension) {
                 if (!empty($_POST[$name])) {
                     if (!$extension['enabled']) {
                         $extensions[$name]['enabled'] = 1;
-                        xman_hook_invoke('xman_extension_enable', null, array($extensions[$name]));
-                        db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "[]")');
-
-                        $updates = xman_get_available_updates();
-                        if (isset($updates[$name])) {
-                            db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
-                        }
+                        xman_enable_extension($name);
                     }
                 }
                 elseif ($extension['enabled']) {
                     $extensions[$name]['enabled'] = 0;
                     $to_del[] = $name;
-                    xman_hook_invoke('xman_extension_disable', null, array($extensions[$name]));
                 }
             }
 
             if (!empty($to_del)) {
-                db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $to_del) . '")');
+                xman_disable_extensions($to_del);
             }
 
             $msg = 'Your configuration has been saved successfully.';
         }
         elseif ($_POST['form_type'] == 'update') {
+            $msg = 'The updates have been applied successfully.';
             foreach (xman_get_available_updates() as $name => $updates) {
-                if (!empty($_POST[$name])) {
-                    xman_update_extension($name, $updates);
+                if (!empty($_POST[$name]) && !xman_update_extension($name, $updates)) {
+                    $msg = 'An error has ocurred. Please try again or contact site administration.';
+                    $class = 'red';
+                    $icon = 'cross';
+
+                    break;
                 }
             }
-
-            $msg = 'The updates have been applied successfully.';
         }
 
-        print '<div class="darkgreen"><img src="' . APP_PATH_IMAGES . 'tick.png"> ' . $msg . '</div>';
+        print '<div class="' . $class . '"><img src="' . APP_PATH_IMAGES . $icon . '.png"> ' . $msg . '</div>';
     }
 ?>
 
@@ -93,15 +92,19 @@ function xman_control_center_page() {
             <table class="table">
                 <tr>
                     <th>Extension</th>
-                    <th>Update IDs</th>
+                    <th>Updates</th>
                 </tr>
                 <?php foreach ($updates as $name => $updates): ?>
                     <tr>
+                        <?php $list = array(); ?>
+                        <?php foreach ($updates as $version => $description): ?>
+                            <?php $list[] = '#' . $version . ': ' . ($description ? $description : 'No description available.'); ?>
+                        <?php endforeach; ?>
                         <td>
                             <input type="checkbox" id="<?php print $name; ?>" name="<?php print $name; ?>" value="checked">
                             <label for="<?php print $name; ?>"><?php print $extensions[$name]['name']; ?></label>
                         </td>
-                        <td><?php print implode(', ', $updates); ?>
+                        <td><?php print implode('<br>', $list); ?>
                     </tr>
                 <?php endforeach; ?>
             </table>
