@@ -5,13 +5,44 @@
  */
 
 /**
- * Displays XMan Control Center page.
+ * Displays XMan configuration page on Control Center.
  */
 function xman_control_center_page() {
     global $lang;
     include APP_PATH_DOCROOT . 'ControlCenter/header.php';
 
-    $extensions = xman_get_extensions();
+    xman_form();
+
+    include APP_PATH_DOCROOT . 'ControlCenter/footer.php';
+}
+
+/**
+ * Displays XMan configuration page on project level.
+ */
+function xman_project_page() {
+    global $project_id, $app_name, $app_title, $user_rights, $userid, $reset_radio, $edoc_field_option_enabled, $hidden_edit, $multiple_arms,
+           $table_pk, $table_pk_label, $this_form_menu_name, $sql_fields, $sendit_enabled, $Proj, $double_data_entry, $isIpad,
+           $lang, $history_widget_enabled, $surveys_enabled, $isMobileDevice, $isIOS, $isIE, $isTablet, $secondary_pk, $longitudinal, $display_today_now_button,
+           $enable_edit_survey_response, $randomization, $custom_record_label, $data_resolution_enabled,
+           $survey_auth_enabled, $survey_auth_apply_all_surveys, $enable_field_attachment_video_url,
+           $pageFields, $question_by_section, $totalPages, $mobile_app_enabled, $api_enabled, $status;
+
+    require_once APP_PATH_DOCROOT . 'Config/init_project.php';
+    require_once APP_PATH_DOCROOT . 'ProjectGeneral/form_renderer_functions.php';
+
+    include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
+
+
+    xman_form(PROJECT_ID, false);
+
+    include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
+}
+
+/**
+ * Builds XMan configuration form.
+ */
+function xman_form($project_id = null, $include_update_form = true) {
+    $extensions = $project_id ? xman_get_enabled_extensions(null, false) : xman_get_extensions();
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $class = 'darkgreen';
@@ -21,24 +52,36 @@ function xman_control_center_page() {
             $to_del = array();
             foreach ($extensions as $name => $extension) {
                 if (!empty($_POST[$name])) {
-                    if (!$extension['enabled']) {
+                    if ($project_id) {
+                        if (empty($extension['projects'][$project_id])) {
+                            $extensions[$name]['projects'][$project_id] = $project_id;
+                            xman_enable_extension($name, $project_id);
+                        }
+                    }
+                    elseif (!$extenion[$enabled]) {
                         $extensions[$name]['enabled'] = 1;
                         xman_enable_extension($name);
                     }
                 }
-                elseif ($extension['enabled']) {
+                elseif ($project_id) {
+                    if (!empty($extensions[$name]['projects'][$project_id])) {
+                        unset($extensions[$name]['projects'][$project_id]);
+                        $to_del[] = $name;
+                    }
+                }
+                else {
                     $extensions[$name]['enabled'] = 0;
                     $to_del[] = $name;
                 }
             }
 
             if (!empty($to_del)) {
-                xman_disable_extensions($to_del);
+                xman_disable_extensions($to_del, $project_id);
             }
 
             $msg = 'Your configuration has been saved successfully.';
         }
-        elseif ($_POST['form_type'] == 'update') {
+        elseif ($include_update_form && $_POST['form_type'] == 'update') {
             $msg = 'The updates have been applied successfully.';
             foreach (xman_get_available_updates() as $name => $updates) {
                 if (!empty($_POST[$name]) && !xman_update_extension($name, $updates)) {
@@ -57,7 +100,7 @@ function xman_control_center_page() {
 
 <h4><img src="<?php print APP_PATH_IMAGES; ?>brick.png"> Extensions</h4>
 <?php if ($extensions): ?>
-    <form action="<?php print APP_PATH_WEBROOT; ?>ControlCenter/xman.php" enctype="multipart/form-data" target="_self" method="post" name="xman-save-form" id="xman-save-form">
+    <form action="<?php print PAGE_FULL; ?>" enctype="multipart/form-data" target="_self" method="post" name="xman-save-form" id="xman-save-form" style="max-width: 700px;">
         <input type="hidden" name="form_type" value="save">
         <table class="table">
             <tr>
@@ -70,7 +113,8 @@ function xman_control_center_page() {
             <?php foreach ($extensions as $name => $info): ?>
                 <tr>
                     <td style="min-width:120px;">
-                        <input type="checkbox" id="<?php print $name; ?>" name="<?php print $name; ?>" value="enabled"<?php print $info['enabled'] ? ' checked' : ''; ?>>
+                        <?php $enabled = $project_id ? !empty($info['projects'][$project_id]) : $info['enabled']; ?>
+                        <input type="checkbox" id="<?php print $name; ?>" name="<?php print $name; ?>" value="enabled"<?php print $enabled ? ' checked' : ''; ?>>
                         <label for="<?php print $name; ?>"><?php print $info['name']; ?></label>
                     </td>
                     <td style="min-width:120px;"><?php print empty($info['description']) ? '-' : htmlspecialchars($info['description']); ?></td>
@@ -85,9 +129,9 @@ function xman_control_center_page() {
         </div>
     </form>
 
-    <?php if ($updates = xman_get_available_updates()): ?>
+    <?php if ($include_update_form && ($updates = xman_get_available_updates())): ?>
         <h4><img src="<?php print APP_PATH_IMAGES; ?>arrow_refresh.png"> Available extension updates</h4>
-        <form action="<?php print APP_PATH_WEBROOT; ?>ControlCenter/xman.php" enctype="multipart/form-data" target="_self" method="post" name="xman-update-form" id="xman-update-form">
+        <form action="<?php print PAGE_FULL; ?>" enctype="multipart/form-data" target="_self" method="post" name="xman-update-form" id="xman-update-form" style="max-width: 700px;">
             <input type="hidden" name="form_type" value="update">
             <table class="table">
                 <tr>
@@ -116,7 +160,5 @@ function xman_control_center_page() {
 <?php else: ?>
     <div class="text-info">No extensions available.</div>
 <?php endif; ?>
-
 <?php
-    include APP_PATH_DOCROOT . 'ControlCenter/footer.php';
 }

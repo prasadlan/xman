@@ -1,15 +1,7 @@
 <?php
-###############################################################################
-# Copyright 2017 University of Florida. All rights reserved.
-# Use of this source code is governed by the license found in the LICENSE file.
-###############################################################################
-
 /**
- * REDCap Extension Manager (XMan).
- *
- * @author Tiago Bember Simeao <tbembersimeao@ufl.edu>
- * @copyright Copyright 2017, University of Florida
- * @license See above
+ * @file
+ * REDCap hooks implementation file.
  */
 
 require_once 'xman.inc';
@@ -27,7 +19,7 @@ function redcap_add_edit_records_page($project_id, $instrument, $event_id) {
  * @see REDCap Hooks documentation
  */
 function redcap_control_center() {
-    xman_set_control_center_item();
+    xman_set_menu_item(APP_PATH_WEBROOT . 'ControlCenter/xman.php');
     xman_hook_invoke('redcap_control_center');
 }
 
@@ -60,6 +52,7 @@ function redcap_data_entry_form_top($project_id, $record, $instrument, $event_id
  * @see REDCap Hooks documentation
  */
 function redcap_every_page_before_render($project_id) {
+    // Loading extensions on every page.
     xman_load_extensions();
     xman_hook_invoke('redcap_every_page_before_render', $project_id, array($project_id));
 }
@@ -69,7 +62,10 @@ function redcap_every_page_before_render($project_id) {
  * @see REDCap Hooks documentation
  */
 function redcap_every_page_top($project_id) {
-    xman_hook_invoke('redcap_data_every_page_top', $project_id, array($project_id));
+    if ($project_id) {
+        xman_set_menu_item(APP_PATH_WEBROOT_PARENT . 'xman.php?pid=' . $project_id);
+    }
+    xman_hook_invoke('redcap_every_page_top', $project_id, array($project_id));
 }
 
 /**
@@ -127,10 +123,10 @@ function redcap_user_rights($project_id) {
  */
 function redcap_hooks_find($hook_function, $project_id = '', $logging = FALSE) {
     $found = array_merge(
-        glob(__DIR__ . "/$hook_function.php"),
-        glob(__DIR__ . "/$hook_function/*.php"),
-        glob(__DIR__ . "/pid$project_id/$hook_function.php"),
-        glob(__DIR__ . "/pid$project_id/$hook_function/*.php")
+        glob(APP_PATH_DOCROOT . "../hooks/$hook_function.php"),
+        glob(APP_PATH_DOCROOT . "../hooks/$hook_function/*.php"),
+        glob(APP_PATH_DOCROOT . "../hooks/pid$project_id/$hook_function.php"),
+        glob(APP_PATH_DOCROOT . "../hooks/pid$project_id/$hook_function/*.php")
     );
 
     if ($logging) {

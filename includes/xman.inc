@@ -19,16 +19,20 @@ function xman_get_pages() {
 
     $pages = xman_hook_invoke('xman_plugins', null, array(), true);
     $pages[$base_path . 'ControlCenter/xman.php'] = 'xman_control_center_page';
+    $pages['xman.php'] = 'xman_project_page';
 
     return $pages;
 }
 
 /**
- * Adds new item to the control center menu.
+ * Adds a link to a XMan admin page.
+ *
+ * @param $path
+ *   The path to the admin page.
  */
-function xman_set_control_center_item() {
-    print '<div id ="xman-menu-item-wrapper" style="display:none"><img src="' . APP_PATH_IMAGES . 'brick.png">&nbsp; <a href="' . APP_PATH_WEBROOT . 'ControlCenter/xman.php"> Extensions Manager (XMan)</a><br/></div>';
-    print '<script src="' . APP_PATH_WEBROOT_PARENT . 'xman/js/xman-menu.js' . '"></script>';
+function xman_set_menu_item($path) {
+    print '<div id ="xman-menu-item-wrapper" style="display:none"><img src="' . APP_PATH_IMAGES . 'brick.png">&nbsp; <a href="' . $path . '"> Extensions Manager (XMan)</a><br/></div>';
+    print '<script src="' . APP_PATH_WEBROOT_PARENT . 'xman/js/xman-menu.js"></script>';
 }
 
 /**
@@ -50,23 +54,71 @@ function xman_load_extensions($project_id = null, $type = 'extension') {
 }
 
 /**
+ * Gets extension info.
+ *
+ * @param string $name
+ *   The extension machine name.
+ *
+ * @return array
+ *   The extension info array, keyed as follows:
+ *     - name: The extension human name
+ *     - enabled: Flag that shows whether the extension is enabled
+ *     - weight: The execution priority level ("lighter" means more priority)
+ *     - global: Flag that shows whether the extension is global
+ *     - authors: Information about extension authors
+ */
+function xman_get_extension($name) {
+    $extensions = xman_get_enabled_extensions();
+    if (!isset($extensions[$name])) {
+        return false;
+    }
+
+    return $extensions[$name];
+}
+
+/**
  * Enables a extension.
  *
  * @param string $name.
  *   The extension machine name to disable.
+ * @param int $project_id
+ *   The project ID to enable the extension. Leave blank for enabling it
+ *   in the global REDCap level.
  */
-function xman_enable_extension($name) {
-    db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "[]")');
-    $updates = xman_get_available_updates();
+function xman_enable_extension($name, $project_id = null) {
+    if ($extension = xman_get_extension($name)) {
+        if (!$project_id) {
+            return;
+        }
+
+        $projects = json_encode($extension['projects'] + array($project_id => $project_id));
+        db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+
+        xman_load_extensions($project_id, 'install');
+    }
+    else {
+        $projects = $project_id ? array($project_id => $project_id) : array();
+        $projects = json_encode($projects);
+
+        db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "' . $projects . '")');
+
+        $updates = xman_get_available_updates();
+        if (isset($updates[$name])) {
+            db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
+        }
+    }
 
     $function = $name . '_xman_enable';
     if (function_exists($function)) {
-        // Invoking enable hook.
-        $function();
-    }
+        if (!$extension) {
+            // Invoking global enable hook.
+            $function();
+        }
 
-    if (isset($updates[$name])) {
-        db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
+        if ($project_id) {
+            // Invoking project enable hook.
+            $function($project_id);
+        }
     }
 }
 
@@ -75,19 +127,37 @@ function xman_enable_extension($name) {
  *
  * @param array $names.
  *   An array of extensions machine names to disable.
+ * @param int $project_id
+ *   The project ID to disable the extension. Leave blank for disable
+ *   the extension at all.
  */
-function xman_disable_extensions($names) {
-    xman_load_extensions(null, 'install');
+function xman_disable_extensions($names, $project_id = null) {
+    xman_load_extensions($project_id, 'install');
 
     foreach ($names as $name) {
         $function = $name . '_xman_disable';
         if (function_exists($function)) {
             // Invoking disable hook.
-            $function();
+            $function($project_id);
         }
     }
 
-    db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $names) . '")');
+    if ($project_id) {
+        foreach ($names as $name) {
+            if (!$extension = xman_get_extension($name)) {
+                continue;
+            }
+
+            unset($extension['projects'][$project_id]);
+            $projects = json_encode($extension['projects']);
+            db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+        }
+    }
+    else {
+        db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $names) . '")');
+    }
+
+    db_query($sql);
 }
 
 /**
@@ -248,7 +318,7 @@ function xman_hook_invoke($hook_name, $project_id = null, $params = array(), $me
         if ($hook_files = redcap_hooks_find($hook_name, $project_id)) {
             foreach ($hook_files as $filename) {
                 $function = include $filename;
-                $result = call_user_func_array($function, $params);
+                $results[] = call_user_func_array($function, $params);
             }
         }
     }
@@ -268,22 +338,44 @@ function xman_hook_invoke($hook_name, $project_id = null, $params = array(), $me
 /**
  * Gets enabled extensions, ordered by execution priority.
  *
+ * @param int $project_id
+ *   (optional) Filter by project ID.
+ * @param bool $sort
+ *   Flag to sort extensions by weight. Defaults to TRUE.
+ *
  * @return array
  *   A list of extensions, keyed by machine name, each of them containing:
  *     - name: The extension human name
  *     - enabled: Flag that shows whether the extension is enabled
  *     - weight: The execution priority level ("lighter" means more priority)
+ *     - global: Flag that shows whether the extension is global
+ *     - authors: Information about extension authors
  */
-function xman_get_enabled_extensions() {
+function xman_get_enabled_extensions($project_id = null, $sort = true) {
     $extensions = array();
 
-    foreach (xman_get_extensions() as $name => $extension) {
+    foreach (xman_get_extensions($project_id) as $name => $extension) {
         if ($extension['enabled']) {
             $extensions[$name] = $extension;
         }
     }
 
-    uasort($extensions, '_redcap_extensions_cmp');
+    if ($project_id) {
+        $aux = array();
+
+        foreach ($extensions as $name => $extension) {
+            if (!empty($extension['projects'][$project_id])) {
+                $aux[$name] = $extension;
+            }
+        }
+
+        $extensions = $aux;
+    }
+
+    if ($sort) {
+        uasort($extensions, '_redcap_extensions_cmp');
+    }
+
     return $extensions;
 }
 
