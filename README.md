@@ -153,10 +153,10 @@ Used to declare new plugins. See details on the next section.
 ## How to create plugins from an extension
 Creating plugins from an extension requires implementing `hook_xman_plugins()`. This hook expects a list of page callbacks (i.e. function names responsible for displaying your page contents), keyed by the page path. See the plugin example from [Getting started](#getting-started) section - `test_xman_plugins()`.
 
-You might noticed that **we no not need to create files anymore** to add new plugins, since we are using page callbacks instead. And you also might noticed that we are free to set up any path we want, even outside the extension folder (as soon as the path does not exist yet).
+You might have noticed that **we no not need to create files to add new plugins anymore**. And you might also have noticed that we are free to set up any page path we want, even outside the extension folder (as soon as the path does not exist yet).
 
 Obs.: Of course, you may also create .php files to be directly accessed within your extension, without passing through `hook_xman_plugins()`. But note that:
-- You won't be able to set up a path outside your extension folder
+- You loose the flexibility of choosing the page path
 - The page will be available even if your extension is disabled
 
 ## Performing updates
