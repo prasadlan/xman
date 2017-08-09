@@ -3,6 +3,9 @@ Extension Management for REDCap. Provides an easy way to enable, disable and con
 
 It is based on [Drupal 7 modules architecture](https://www.drupal.org/docs/7/creating-custom-modules).
 
+## Prerequisites
+- Apache server with [mod_rewrite](http://httpd.apache.org/docs/current/mod/mod_rewrite.html) extension enabled
+
 ## Installation
 - Download XMan and drop `xman` folder in your REDCap root
 - Move `.htaccess` file to the REDCap root
@@ -138,7 +141,7 @@ Triggered when an extension is about to be disabled. Useful for garbage cleaning
 #### hook_xman_extension_project_disable($project_id)
 Triggered when an extension is about to be disabled in a project.
 
-### hook_xman_update_N()
+#### hook_xman_update_N()
 Triggered when the administrative user submits the "Available updates" form on *Control Center > Extensions Manager (XMan)* page.
 
 This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the updater checks if N is bigger than the last executed update, then it gets executed. After that, to perform another update, you need to create a function with a bigger N.
