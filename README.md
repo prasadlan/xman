@@ -35,7 +35,7 @@ The .info file is a JSON that contains basic info about your extension. Example:
 
 Maybe the only confusing property above would be `global`. It defines whether the extension is global or to enabled/disabled on each REDCap project.
 
-### .extension.info file
+### .extension file
 The .extension file is a PHP code which consists the heart of the extension. If the extension is enabled, its .extension file included on every page load. Use your .extension file to implement hooks and plugins. Example:
 
 ```php
