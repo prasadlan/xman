@@ -41,7 +41,7 @@ The .extension file is a PHP code which consists the heart of the extension. If 
 /**
  * Hook example.
  */
-function test_redcap_every_page_top() {
+function test_redcap_every_page_top($project_id) {
     print '<script>alert('Test!')</script>';
 }
 
@@ -99,7 +99,7 @@ function test_xman_extension_update_1() {
 }
 ```
 
-See "New hooks available" section for further details.
+See [New hooks available](#new-hooks-available) section for further details.
 
 ## Managing extensions
 You may manage extensions by accessing *Control Center > Extension Manager (XMan)*.
@@ -116,12 +116,12 @@ function <extension_name>_<hook_name>($param1, $param2, ...) {
 }
 ```
 
-See example on the "Getting started" section - `test_redcap_every_page_top()`.
+See example on the [Getting started][#getting-started] section - `test_redcap_every_page_top()`.
 
-Check REDCap documentation to see a full list of available hooks. On "New hooks available", there is a list of additional hooks provided by XMan.
+Check REDCap documentation to see a full list of available hooks. On [New hooks available](#new-hooks-available), there is a list of additional hooks provided by XMan.
 
 ### Concurrent hooks
-Two (or more) different extensions can implement the **same** hook without any conflicts. But who gets priority on execution? On `redcap_extensions` table there is a "weight" column, responsible for sorting the extensions to be executed - the haviest the extension, the lowest priority. Thus, if you need that you extension runs *after* or *before* a concurrent one, you might use one of the hooks listed on the next section to adjust your extension's "weight" value.
+Two (or more) different extensions can implement the **same** hook without any conflicts. But who gets priority on execution? On `xman_extensions` table there is a "weight" column, responsible for sorting the extensions to be executed - the haviest the extension, the lowest priority. Thus, if you need that you extension runs *after* or *before* a concurrent one, you might use one of the hooks listed on the next section to adjust your extension's "weight" value.
 
 ## New hooks available
 XMan provides custom hooks in order to make sure that the extensions do not need any external script or code or manual intervention to work. They are design to assist the developers on database operations.
@@ -141,49 +141,25 @@ Triggered when an extension is about to be disabled in a project.
 ### hook_xman_update_N()
 Triggered when the administrative user submits the "Available updates" form on *Control Center > Extensions Manager (XMan)* page.
 
-This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. If N is bigger than the last executed update, then it gets executed. After that, to perform another update, you need to create a function with a bigger N.
+This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the updater checks if N is bigger than the last executed update, then it gets executed. After that, to perform another update, you need to create a function with a bigger N.
 
 This architecture provides consistency among several users, using different software versions that want to update the code and then run required updates by the admin UI.
 
 Obs.: It is highly recommended to add a comment block above your function header, since it will be displayed as helper/description text on the "Available updates" list.
 
 #### hook_xman_plugins()
-Used to declare new plugins. See details on the next sexction.
+Used to declare new plugins. See details on the next section.
 
 ## How to create plugins from an extension
-Creating plugins from an extension requires implementing `hook_xman_plugins()`. This hook expects a list of page callbacks (i.e. function names responsible for displaying your page contents), keyed by the page path. Example:
+Creating plugins from an extension requires implementing `hook_xman_plugins()`. This hook expects a list of page callbacks (i.e. function names responsible for displaying your page contents), keyed by the page path. See the plugin example from [Getting started](#getting-started) section - `test_xman_plugins()`.
 
-```
-/**
- * Implements hook_xman_plugins().
- */
-function example_xman_plugins() {
-    $items = array();
+You might noticed that **we no not need to create files anymore** to add new plugins, since we are using page callbacks instead. And you also might noticed that we are free to set up any path we want, even outside the extension folder (as soon as the path does not exist yet).
 
-    $items['HelloWorld.php'] = 'example_hello_world_page';
-    $items[APP_PATH_WEBROOT . 'Test.php'] = 'example_test_page';
-
-    return $items;
-}
-
-function example_hello_world_page() {
-    print 'Hello world!';
-}
-
-function example_test_page() {
-    print 'Testing plugin inside REDCap webroot.';
-}
-```
-
-On the example above, you should see "Hello world!" when accessing `/redcap/HelloWorld.php`. In the same way, you might see "Testing plugin inside REDCap webroot." when accessing `/redcap/redcap_v<redcap_version>/Test.php`.
-
-Note that `HelloWorld.php` and `Test.php` are path aliases, **not actual files**, so you are not expected to create them.
-
-Obs.: Of course, you may also create .php files to be directly accessed within your extension, without passing through `hook_xman_plugins()`, but note that:
+Obs.: Of course, you may also create .php files to be directly accessed within your extension, without passing through `hook_xman_plugins()`. But note that:
 - You won't be able to set up a path outside your extension folder
 - The page will be available even if your extension is disabled
 
 ## Performing updates
-If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (to know how to do that, see "New hooks available" section).
+If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (to know how to do that, see [New hooks available][#new-hooks-available] section).
 
 After implementing your update function, go to *Control Center > Extensions Manager (Xman)*. Then you should see your update listed on "Available updates" section.
