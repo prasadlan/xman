@@ -124,7 +124,7 @@ See example on the [Getting started][#getting-started] section - `test_redcap_ev
 Check REDCap documentation to see a full list of available hooks. On [New hooks available](#new-hooks-available) section, there is a list of additional hooks provided by XMan.
 
 ### Concurrent hooks
-Two (or more) different extensions can implement the **same** hook without any conflicts. But who gets priority on execution? The `xman_extensions` table contains a column named `weight`, responsible for sorting the extensions to be executed - the haviest the extension, the lowest priority. Thus, if you need that you extension runs *after* or *before* a concurrent one, you might use one of the hooks listed on the next section to adjust your extension's `weight` value.
+Two (or more) different extensions can implement the **same** hook without any conflicts. But who gets priority on execution? The `xman_extensions` table contains a column named `weight`, responsible for sorting the extensions to be executed - the haviest the extension, the lowest priority. Thus, if you need that you extension runs *after* or *before* a concurrent one, you might want to implement `hook_xman_extension_enable()` or `hook_xman_update_N()` to adjust your extension's `weight` value. See [New hooks available](#new-hooks-available) section to know more about these hooks.
 
 ## New hooks available
 XMan provides custom hooks in order to make sure that the extensions do not need any external script or code or manual intervention to work. They are design to assist the developers on database operations.
