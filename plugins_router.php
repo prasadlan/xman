@@ -24,8 +24,11 @@ if (!empty($_GET['q'])) {
     define('PAGE_FULL', htmlspecialchars($_SERVER['REQUEST_URI']));
     require '../redcap_connect.php';
 
+    // Checking if we are in a project context.
+    $project_id = empty($_GET['pid']) ? null : $_GET['pid'];
+
     // Getting available pages from enabled modules.
-    if ($pages = xman_get_pages()) {
+    if ($pages = xman_get_pages($project_id)) {
         $path = $_GET['q'];
         if (!empty($pages[$path]) && function_exists($pages[$path])) {
             // Calling page callback.

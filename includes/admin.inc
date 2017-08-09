@@ -8,11 +8,11 @@
  * Displays XMan configuration page on Control Center.
  */
 function xman_control_center_page() {
-    global $lang;
+    // Bringing global variables to the scope of this function.
+    extract($GLOBALS);
+
     include APP_PATH_DOCROOT . 'ControlCenter/header.php';
-
     xman_form();
-
     include APP_PATH_DOCROOT . 'ControlCenter/footer.php';
 }
 
@@ -20,21 +20,14 @@ function xman_control_center_page() {
  * Displays XMan configuration page on project level.
  */
 function xman_project_page() {
-    global $project_id, $app_name, $app_title, $user_rights, $userid, $reset_radio, $edoc_field_option_enabled, $hidden_edit, $multiple_arms,
-           $table_pk, $table_pk_label, $this_form_menu_name, $sql_fields, $sendit_enabled, $Proj, $double_data_entry, $isIpad,
-           $lang, $history_widget_enabled, $surveys_enabled, $isMobileDevice, $isIOS, $isIE, $isTablet, $secondary_pk, $longitudinal, $display_today_now_button,
-           $enable_edit_survey_response, $randomization, $custom_record_label, $data_resolution_enabled,
-           $survey_auth_enabled, $survey_auth_apply_all_surveys, $enable_field_attachment_video_url,
-           $pageFields, $question_by_section, $totalPages, $mobile_app_enabled, $api_enabled, $status;
+    // Bringing global variables to the scope of this function.
+    extract($GLOBALS);
 
     require_once APP_PATH_DOCROOT . 'Config/init_project.php';
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/form_renderer_functions.php';
 
     include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-
-
     xman_form(PROJECT_ID, false);
-
     include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 }
 
@@ -106,7 +99,9 @@ function xman_form($project_id = null, $include_update_form = true) {
             <tr>
                 <th>Name</th>
                 <th>Description</th>
-                <th>Type</th>
+                <?php if (!$project_id): ?>
+                    <th>Type</th>
+                <?php endif; ?>
                 <th>Version</th>
                 <th>Authors</th>
             </tr>
@@ -118,7 +113,9 @@ function xman_form($project_id = null, $include_update_form = true) {
                         <label for="<?php print $name; ?>"><?php print $info['name']; ?></label>
                     </td>
                     <td style="min-width:120px;"><?php print empty($info['description']) ? '-' : htmlspecialchars($info['description']); ?></td>
-                    <td><?php print empty($info['global']) ? 'Project' : 'Global'; ?></td>
+                    <?php if (!$project_id): ?>
+                        <td><?php print empty($info['global']) ? 'Project' : 'Global'; ?></td>
+                    <?php endif; ?>
                     <td><?php print empty($info['version']) ? '-' : $info['version']; ?></td>
                     <td><?php print empty($info['authors']) ? '-' : htmlspecialchars($info['authors']); ?></td>
                 </tr>

@@ -53,7 +53,7 @@ function redcap_data_entry_form_top($project_id, $record, $instrument, $event_id
  */
 function redcap_every_page_before_render($project_id) {
     // Loading extensions on every page.
-    xman_load_extensions();
+    xman_load_extensions($project_id);
     xman_hook_invoke('redcap_every_page_before_render', $project_id, array($project_id));
 }
 

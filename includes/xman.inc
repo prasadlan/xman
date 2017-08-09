@@ -10,14 +10,17 @@ include_once 'admin.inc';
 /**
  * Gets all available XMan plugins().
  *
+ * @param int $project_id
+ *   The project ID.
+ *
  * @return array $pages
  *   An array of pages callbacks, keyed by page path.
  */
-function xman_get_pages() {
+function xman_get_pages($project_id = null) {
     global $redcap_version;
     $base_path = 'redcap_v' . $redcap_version . '/';
 
-    $pages = xman_hook_invoke('xman_plugins', null, array(), true);
+    $pages = xman_hook_invoke('xman_plugins', $project_id, array(), true);
     $pages[$base_path . 'ControlCenter/xman.php'] = 'xman_control_center_page';
     $pages['xman.php'] = 'xman_project_page';
 
@@ -84,42 +87,56 @@ function xman_get_extension($name) {
  * @param int $project_id
  *   The project ID to enable the extension. Leave blank for enabling it
  *   in the global REDCap level.
+ *
+ * @return bool
+ *   TRUE if success, FALSE otherwise.
  */
 function xman_enable_extension($name, $project_id = null) {
-    if ($extension = xman_get_extension($name)) {
-        if (!$project_id) {
-            return;
+    try {
+        if ($extension = xman_get_extension($name)) {
+            if (!$project_id) {
+                return;
+            }
+
+            $projects = json_encode($extension['projects'] + array($project_id => $project_id));
+            db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+
+            xman_load_extensions($project_id, 'install');
+        }
+        else {
+            $projects = $project_id ? array($project_id => $project_id) : array();
+            $projects = json_encode($projects);
+
+            db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "' . $projects . '")');
+
+            $updates = xman_get_available_updates();
+            if (isset($updates[$name])) {
+                db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
+            }
         }
 
-        $projects = json_encode($extension['projects'] + array($project_id => $project_id));
-        db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
-
-        xman_load_extensions($project_id, 'install');
-    }
-    else {
-        $projects = $project_id ? array($project_id => $project_id) : array();
-        $projects = json_encode($projects);
-
-        db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "' . $projects . '")');
-
-        $updates = xman_get_available_updates();
-        if (isset($updates[$name])) {
-            db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
-        }
-    }
-
-    $function = $name . '_xman_enable';
-    if (function_exists($function)) {
         if (!$extension) {
-            // Invoking global enable hook.
-            $function();
+            $function = $name . '_xman_enable';
+            if (function_exists($function)) {
+                // Invoking global enable hook.
+                $function();
+            }
         }
 
         if ($project_id) {
-            // Invoking project enable hook.
-            $function($project_id);
+            $function = $name . '_xman_project_enable';
+            if (function_exists($function)) {
+                // Invoking project enable hook.
+                $function($project_id);
+            }
         }
     }
+    catch (Exception $e) {
+        // TODO: log error.
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -130,34 +147,43 @@ function xman_enable_extension($name, $project_id = null) {
  * @param int $project_id
  *   The project ID to disable the extension. Leave blank for disable
  *   the extension at all.
+ *
+ * @return bool
+ *   TRUE if success, FALSE otherwise.
  */
 function xman_disable_extensions($names, $project_id = null) {
     xman_load_extensions($project_id, 'install');
 
-    foreach ($names as $name) {
-        $function = $name . '_xman_disable';
-        if (function_exists($function)) {
-            // Invoking disable hook.
-            $function($project_id);
-        }
-    }
-
-    if ($project_id) {
+    try {
+        $suffix = $project_id ? '_xman_project_disable' : '_xman_disable';
         foreach ($names as $name) {
-            if (!$extension = xman_get_extension($name)) {
-                continue;
+            $function = $name . $suffix;
+            if (function_exists($function)) {
+                $function($project_id);
             }
+        }
 
-            unset($extension['projects'][$project_id]);
-            $projects = json_encode($extension['projects']);
-            db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+        if ($project_id) {
+            foreach ($names as $name) {
+                if (!$extension = xman_get_extension($name)) {
+                    continue;
+                }
+
+                unset($extension['projects'][$project_id]);
+                $projects = json_encode($extension['projects']);
+                db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+            }
+        }
+        else {
+            db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $names) . '")');
         }
     }
-    else {
-        db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $names) . '")');
+    catch (Exception $e) {
+        // TODO: log error.
+        return false;
     }
 
-    db_query($sql);
+    return true;
 }
 
 /**
@@ -208,6 +234,7 @@ function xman_update_extension($name, $updates = null) {
         }
     }
     catch (Exception $e) {
+        // TODO: log error.
         return false;
     }
 
@@ -302,7 +329,7 @@ function xman_hook_invoke($hook_name, $project_id = null, $params = array(), $me
 
     if ($extensions = xman_get_enabled_extensions()) {
         foreach ($extensions as $name => $extension) {
-            if ($project_id && !empty($extension['projects'] && !in_array($project_id, $extension['projects']))) {
+            if ($project_id && (empty($extension['projects']) || empty($extension['projects'][$project_id]))) {
                 continue;
             }
 
