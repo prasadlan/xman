@@ -12,7 +12,7 @@ function xman_control_center_page() {
     extract($GLOBALS);
 
     include APP_PATH_DOCROOT . 'ControlCenter/header.php';
-    xman_form();
+    xman_form(xman_get_extensions());
     include APP_PATH_DOCROOT . 'ControlCenter/footer.php';
 }
 
@@ -27,16 +27,29 @@ function xman_project_page() {
     require_once APP_PATH_DOCROOT . 'ProjectGeneral/form_renderer_functions.php';
 
     include APP_PATH_DOCROOT . 'ProjectGeneral/header.php';
-    xman_form(PROJECT_ID, false);
+
+    $extensions = array();
+    foreach (xman_get_enabled_extensions(null, false) as $name => $extension) {
+        if (empty($extension['global'])) {
+            $extensions[$name] = $extension;
+        }
+    }
+    xman_form($extensions, PROJECT_ID, false);
+
     include APP_PATH_DOCROOT . 'ProjectGeneral/footer.php';
 }
 
 /**
  * Builds XMan configuration form.
+ *
+ * @param array $extensions
+ *   A list of extensions info.
+ * @param int $project_id
+ *   The project_id.
+ * @param bool include_update_form
+ *   Flag that defines whether the "Available updates" form is displayed.
  */
-function xman_form($project_id = null, $include_update_form = true) {
-    $extensions = $project_id ? xman_get_enabled_extensions(null, false) : xman_get_extensions();
-
+function xman_form($extensions, $project_id = null, $include_update_form = true) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $class = 'darkgreen';
         $icon = 'tick';

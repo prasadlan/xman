@@ -327,12 +327,8 @@ function xman_get_available_updates() {
 function xman_hook_invoke($hook_name, $project_id = null, $params = array(), $merge_results = false) {
     $results = array();
 
-    if ($extensions = xman_get_enabled_extensions()) {
+    if ($extensions = xman_get_enabled_extensions($project_id)) {
         foreach ($extensions as $name => $extension) {
-            if ($project_id && (empty($extension['projects']) || empty($extension['projects'][$project_id]))) {
-                continue;
-            }
-
             $function = $name . '_' . $hook_name;
             if (function_exists($function)) {
                 $results[] = call_user_func_array($function, $params);
