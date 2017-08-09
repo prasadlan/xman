@@ -9,7 +9,7 @@ It is based on [Drupal 7 modules architecture](https://www.drupal.org/docs/7/cre
 ## Installation
 - Download XMan and drop `xman` folder in your REDCap root
 - Move `.htaccess` file to the REDCap root
-- Go to Control **Center > General Configuration**
+- Go to **Control Center > General Configuration**
 - Set **REDCap Hooks** as the absolute path to the `includes/hooks.inc` file (e.g. `/var/www/redcap/xman/includes/hooks.inc`), and save
 
 ## Getting started
