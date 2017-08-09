@@ -144,7 +144,7 @@ Triggered when an extension is about to be disabled in a project.
 #### hook_xman_update_N()
 Triggered when the administrative user submits the "Available updates" form on *Control Center > Extensions Manager (XMan)* page.
 
-This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the updater checks if N is bigger than the last executed update, then it gets executed. After that, to perform another update, you need to create a function with a bigger N.
+This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the updater checks if N is bigger than the last executed update. If so, the function is executed. So from now on, you need to create a function with a bigger N to perform another update.
 
 This architecture provides consistency among several users, using different software versions that want to update the code and then run required updates by the admin UI.
 
