@@ -9,8 +9,8 @@ It is based on [Drupal 7 modules architecture](https://www.drupal.org/docs/7/cre
 ## Installation
 - Download XMan and drop `xman` folder in your REDCap root
 - Move `.htaccess` file to the REDCap root
-- Go to Control *Center > General Configuration*
-- Set *REDCap Hooks* as the absolute path to the `includes/hooks.inc` file (e.g. `/var/www/redcap/xman/includes/hooks.inc`), and save
+- Go to Control **Center > General Configuration**
+- Set **REDCap Hooks** as the absolute path to the `includes/hooks.inc` file (e.g. `/var/www/redcap/xman/includes/hooks.inc`), and save
 
 ## Getting started
 In order to create an extension, you need to add a new folder to `xman/extensions` directory (e.g. `xman/extensions/test`).
@@ -107,7 +107,9 @@ See [New hooks available](#new-hooks-available) section for further details.
 ## Managing extensions
 You may manage extensions by accessing *Control Center > Extension Manager (XMan)*.
 
-If you followed the example from the previous section, you might see an extension called "Test" on the list. After enabling it, a "Test!" alert will pop up on every page you access (except on pages within the project scope, because this extension is not set as global on .info file). You may also access `/redcap/Test` page, which also display a "Test!" message.
+If you followed the example from the previous section, you might see an extension called "Test" on the list. After enabling it, a "Test!" alert will pop up on every page you access (except on pages within the project scope, because this extension is not set as global on .info file).
+
+Besides that, you may also access our plugin page at `/redcap/Test`, which also displays a "Test!" message.
 
 To enable your extension on a given project, access your project main page, and then click on *Extension Manager (XMan)*. This page is analogous the previous one at the Control Center. After enabling "Test" for the given project, now you should see the popup again.
 
@@ -142,7 +144,7 @@ Triggered when an extension is about to be disabled. Useful for garbage cleaning
 Triggered when an extension is about to be disabled in a project.
 
 #### hook_xman_update_N()
-Triggered when the administrative user submits the "Available updates" form on *Control Center > Extensions Manager (XMan)* page.
+Triggered when the administrative user submits the "Available updates" form on **Control Center > Extensions Manager (XMan)** page.
 
 This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the updater checks if N is bigger than the last executed update. If so, the function is executed. So from now on, you need to create a function with a bigger N to perform another update.
 
@@ -158,11 +160,11 @@ Creating plugins from an extension requires implementing `hook_xman_plugins()`. 
 
 You might have noticed that **we no not need to create files to add new plugins anymore**. And you might also have noticed that we are free to set up any page path we want, even outside the extension folder (as soon as the path does not exist yet).
 
-Obs.: Of course, you may also create .php files to be directly accessed within your extension, without passing through `hook_xman_plugins()`. But note that:
-- You loose the flexibility of choosing the page path
+Obs.: Of course, you may also create .php files to be directly accessed within your extension, bypassing the `hook_xman_plugins()` workflow. But note that:
+- You loose the flexibility of choose the page path
 - The page will be available even if your extension is disabled
 
 ## Performing updates
-If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (to know how to do that, see [New hooks available][#new-hooks-available] section).
+If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (check [New hooks available][#new-hooks-available] section to know how to do that).
 
-After implementing your update function, go to *Control Center > Extensions Manager (Xman)*. Then you should see your update listed on "Available updates" section.
+After implementing your update function, go to **Control Center > Extensions Manager (Xman)**. Then you should see your update listed on "Available updates" section.
