@@ -4,7 +4,7 @@ Extension Management for REDCap. Provides an easy way to enable, disable and con
 It is based on [Drupal 7 modules architecture](https://www.drupal.org/docs/7/creating-custom-modules).
 
 ## Prerequisites
-- Apache server with [mod_rewrite](http://httpd.apache.org/docs/current/mod/mod_rewrite.html) extension enabled
+- Apache's [mod_rewrite](http://httpd.apache.org/docs/current/mod/mod_rewrite.html) extension enabled.
 
 ## Installation
 - Download XMan and drop `xman` folder in your REDCap root
@@ -105,23 +105,24 @@ function test_xman_extension_update_1() {
 See [New hooks available](#new-hooks-available) section for further details.
 
 ## Managing extensions
-You may manage extensions by accessing *Control Center > Extension Manager (XMan)*.
+You may manage extensions by accessing **Control Center > Extension Manager (XMan)**.
 
 If you followed the example from the previous section, you might see an extension called "Test" on the list. After enabling it, a "Test!" alert will pop up on every page you access (except on pages within the project scope, because this extension is not set as global on .info file).
 
 Besides that, you may also access our plugin page at `/redcap/Test`, which also displays a "Test!" message.
 
-To enable your extension on a given project, access your project main page, and then click on *Extension Manager (XMan)*. This page is analogous the previous one at the Control Center. After enabling "Test" for the given project, now you should see the popup again.
+To enable your extension on a given project, access your project main page, and then click on *8Extension Manager (XMan)8*. This page is analogous the previous one at the Control Center. After enabling "Test" for the given project, now you should see the popup again, this time inside the project context.
 
 ## How implement a hook from an extension
 To implement a hook from an extension, open your `<extension_name>.extension` file, and then create a function as follows:
 
-```
+```php
 function <extension_name>_<hook_name>($param1, $param2, ...) {
+    // Do stuff.
 }
 ```
 
-See example on the [Getting started][#getting-started] section - `test_redcap_every_page_top()`.
+See example on the [Getting started](#getting-started) section - `test_redcap_every_page_top()`.
 
 Check REDCap documentation to see a full list of available hooks. On [New hooks available](#new-hooks-available) section, there is a list of additional hooks provided by XMan.
 
@@ -146,9 +147,7 @@ Triggered when an extension is about to be disabled in a project.
 #### hook_xman_update_N()
 Triggered when the administrative user submits the "Available updates" form on **Control Center > Extensions Manager (XMan)** page.
 
-This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the updater checks if N is bigger than the last executed update. If so, the function is executed. So from now on, you need to create a function with a bigger N to perform another update.
-
-This architecture provides consistency among several users, using different software versions that want to update the code and then run required updates by the admin UI.
+This implementation requires an arbitrary version number, e.g. `test_xman_update_1`, `test_xman_update_15`. etc. When triggered, the XMan updater checks if N is bigger than the last executed update - if so, the function is executed.
 
 Obs.: It is highly recommended to add a comment block above your function header, since it will be displayed as helper/description text on the "Available updates" list.
 
@@ -156,7 +155,7 @@ Obs.: It is highly recommended to add a comment block above your function header
 Used to declare new plugins. See details on the next section.
 
 ## How to create plugins from an extension
-Creating plugins from an extension requires implementing `hook_xman_plugins()`. This hook expects a list of page callbacks (i.e. function names responsible for displaying your page contents), keyed by the page path. See the plugin example from [Getting started](#getting-started) section - `test_xman_plugins()`.
+Creating plugins from an extension requires implementing `hook_xman_plugins()`. This hook expects a list of page callbacks (i.e. function names responsible for displaying your page contents), keyed by the page path. See the plugin example from [Getting started](#extension-file) section - `test_xman_plugins()`.
 
 You might have noticed that **we no not need to create files to add new plugins anymore**. And you might also have noticed that we are free to set up any page path we want, even outside the extension folder (as soon as the path does not exist yet).
 
@@ -165,6 +164,6 @@ Obs.: Of course, you may also create .php files to be directly accessed within y
 - The page will be available even if your extension is disabled
 
 ## Performing updates
-If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (check [New hooks available][#new-hooks-available] section to know how to do that).
+If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (check [New hooks available](#new-hooks-available) section to know how to do that).
 
 After implementing your update function, go to **Control Center > Extensions Manager (Xman)**. Then you should see your update listed on "Available updates" section.
