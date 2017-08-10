@@ -36,7 +36,7 @@ The .info file is a JSON that contains basic info about your extension. Example:
 Maybe the only confusing property above would be `global`. It defines whether the extension is global or to enabled/disabled on each REDCap project.
 
 ### .extension file
-The .extension file is a PHP code which consists the heart of the extension. If the extension is enabled, its .extension file included on every page load. Use your .extension file to implement hooks and plugins. Example:
+The .extension file is the heart of a extension. Once the extension is enabled, its .extension file will included on every page load. Use your .extension file to implement hooks and plugins. Example:
 
 ```php
 <?php
@@ -45,7 +45,7 @@ The .extension file is a PHP code which consists the heart of the extension. If 
  * Hook example.
  */
 function test_redcap_every_page_top($project_id) {
-    print '<script>alert('Test!')</script>';
+    print '<script>alert("Test!");</script>';
 }
 
 /**
@@ -65,7 +65,7 @@ function test_redcap_every_page_top($project_id) {
 
 The code above displays a "Test!" popup on every page. It also creates a new page at `/redcap/Test` that displays the same message.
 
-See details about hooks and plugins implementation on the next sections.
+See details about [hooks](#new-hooks-available) and [plugins](#how-to-create-plugins-from-an-extension) implementation on the next sections.
 
 ### (optional) .install file
 This PHP file not mandatory, but if you need to perform database operations in order to get your extension to work, that is the proper location to implement some dedicated hooks for that, such as `hook_xman_extension_enable()`, `hook_xman_extension_project_enable()`, `hook_xman_extension_disable()`, `hook_xman_extension_project_disable()` and `hook_xman_update_N()`. Example:
@@ -107,11 +107,11 @@ See [New hooks available](#new-hooks-available) section for further details.
 ## Managing extensions
 You may manage extensions by accessing **Control Center > Extension Manager (XMan)**.
 
-If you followed the example from the previous section, you might see an extension called "Test" on the list. After enabling it, a "Test!" alert will pop up on every page you access (except on pages within the project scope, because this extension is not set as global on .info file).
+If you followed the example from the previous section, you might see a "Test" extension on the list. After enabling it, a "Test!" alert will pop up on every page you access (except on pages within the project scope, because this extension is not set as global on .info file).
 
-Besides that, you may also access our plugin page at `/redcap/Test`, which also displays a "Test!" message.
+You may also access the plugin page at `/redcap/Test`, which also displays a "Test!" message.
 
-To enable your extension on a given project, access your project main page, and then click on *8Extension Manager (XMan)8*. This page is analogous the previous one at the Control Center. After enabling "Test" for the given project, now you should see the popup again, this time inside the project context.
+To enable your extension on a given project, access your project main page, and then click on **Extension Manager (XMan)**. This page is analogous the previous one at the Control Center. After enabling "Test" for the given project, now you should see the popup again, this time in the project context.
 
 ## How implement a hook from an extension
 To implement a hook from an extension, open your `<extension_name>.extension` file, and then create a function as follows:
@@ -159,11 +159,11 @@ Creating plugins from an extension requires implementing `hook_xman_plugins()`. 
 
 You might have noticed that **we no not need to create files to add new plugins anymore**. And you might also have noticed that we are free to set up any page path we want, even outside the extension folder (as soon as the path does not exist yet).
 
-Obs.: Of course, you may also create .php files to be directly accessed within your extension, bypassing the `hook_xman_plugins()` workflow. But note that:
+Obs.: Of course, you can also create .php files to be directly accessed within your extension, bypassing the `hook_xman_plugins()` workflow. But note that:
 - You loose the flexibility of choose the page path
 - The page will be available even if your extension is disabled
 
 ## Performing updates
 If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (check [New hooks available](#new-hooks-available) section to know how to do that).
 
-After implementing your update function, go to **Control Center > Extensions Manager (Xman)**. Then you should see your update listed on "Available updates" section.
+After implementing your update function, go to **Control Center > Extensions Manager (Xman)**. Then you should see your update listed at "Available updates" section.
