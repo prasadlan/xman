@@ -159,8 +159,8 @@ Creating plugins from an extension requires implementing `hook_xman_plugins()`. 
 
 You might have noticed that **we no not need to create files to add new plugins anymore**. And you might also have noticed that we are free to set up any page path we want, even outside the extension folder (as soon as the path does not exist yet).
 
-Obs.: Of course, you can also create .php files to be directly accessed within your extension, bypassing the `hook_xman_plugins()` workflow. But note that:
-- You loose the flexibility of choose the page path
+Obs.: of course, you can also create .php files to be directly accessed within your extension, bypassing the `hook_xman_plugins()` workflow. But note that:
+- You lose the flexibility of choose the page path
 - The page will be available even if your extension is disabled
 
 ## Performing updates
