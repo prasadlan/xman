@@ -1,0 +1,7 @@
+{
+    "name": "Test",
+    "description": "Prints a test message on every page.",
+    "version": "1.0",
+    "global": 0,
+    "authors": "Joe Doe <example@example.com>"
+}

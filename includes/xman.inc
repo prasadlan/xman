@@ -99,7 +99,7 @@ function xman_enable_extension($name, $project_id = null) {
             }
 
             $projects = json_encode($extension['projects'] + array($project_id => $project_id));
-            db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+            db_query('UPDATE xman_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
 
             xman_load_extensions($project_id, 'install');
         }
@@ -107,11 +107,11 @@ function xman_enable_extension($name, $project_id = null) {
             $projects = $project_id ? array($project_id => $project_id) : array();
             $projects = json_encode($projects);
 
-            db_query('INSERT INTO redcap_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "' . $projects . '")');
+            db_query('INSERT INTO xman_extensions (name, weight, schema_version, projects) VALUES ("' . db_escape($name) . '", 0, 0, "' . $projects . '")');
 
             $updates = xman_get_available_updates();
             if (isset($updates[$name])) {
-                db_query('UPDATE redcap_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
+                db_query('UPDATE xman_extensions SET schema_version = ' . end($updates[$name]) . ' WHERE name = "' . db_escape($name) . '"');
             }
         }
 
@@ -171,11 +171,11 @@ function xman_disable_extensions($names, $project_id = null) {
 
                 unset($extension['projects'][$project_id]);
                 $projects = json_encode($extension['projects']);
-                db_query('UPDATE redcap_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
+                db_query('UPDATE xman_extensions SET projects = "' . db_escape($projects) . '" WHERE name = "' . db_escape($name) . '"');
             }
         }
         else {
-            db_query('DELETE FROM redcap_extensions WHERE name IN ("' . implode('", "', $names) . '")');
+            db_query('DELETE FROM xman_extensions WHERE name IN ("' . implode('", "', $names) . '")');
         }
     }
     catch (Exception $e) {
@@ -229,7 +229,7 @@ function xman_update_extension($name, $updates = null) {
             $function = $name . '_xman_update_' . $version;
             if (function_exists($function)) {
                 $function();
-                db_query('UPDATE redcap_extensions SET schema_version = ' . $version . ' WHERE name = "' . $name . '"');
+                db_query('UPDATE xman_extensions SET schema_version = ' . $version . ' WHERE name = "' . $name . '"');
             }
         }
     }
@@ -396,7 +396,7 @@ function xman_get_enabled_extensions($project_id = null, $sort = true) {
     }
 
     if ($sort) {
-        uasort($extensions, '_redcap_extensions_cmp');
+        uasort($extensions, '_xman_extensions_cmp');
     }
 
     return $extensions;
@@ -414,7 +414,7 @@ function xman_get_enabled_extensions($project_id = null, $sort = true) {
 function xman_get_extensions() {
     $enabled_extensions = array();
 
-    $q = db_query('SELECT * FROM redcap_extensions ORDER BY weight');
+    $q = db_query('SELECT * FROM xman_extensions ORDER BY weight');
     if (db_num_rows($q)) {
         while ($extension = db_fetch_assoc($q)) {
             $extension['projects'] = json_decode($extension['projects'], true);

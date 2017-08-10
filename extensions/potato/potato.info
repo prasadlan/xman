@@ -1,7 +1,0 @@
-{
-    "name": "Potato",
-    "description": "Asks if you like potato before any data entry.",
-    "version": "1.0",
-    "global": 0,
-    "authors": "Tiago Bember <tbembersimeao@ufl.edu>"
-}

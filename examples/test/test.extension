@@ -1,0 +1,22 @@
+<?php
+
+/**
+ * Hook example.
+ */
+function test_redcap_every_page_top($project_id) {
+    print '<script>alert("Test!");</script>';
+}
+
+/**
+ * Plugin example.
+ */
+ function test_xman_plugins() {
+     return array('Test.php' => 'test_page');
+ }
+ 
+ /**
+  * Plugin page callback.
+  */
+ function test_page() {
+     print 'Test!';
+ }

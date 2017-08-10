@@ -8,9 +8,9 @@ It is based on [Drupal 7 modules architecture](https://www.drupal.org/docs/7/cre
 
 ## Installation
 - Download XMan and drop `xman` folder in your REDCap root
+- Run `install.sql` against your database
 - Move `.htaccess` file to the REDCap root
-- Go to **Control Center > General Configuration**
-- Set **REDCap Hooks** as the absolute path to the `includes/hooks.inc` file (e.g. `/var/www/redcap/xman/includes/hooks.inc`), and save
+- Go to **Control Center > General Configuration**, set **REDCap Hooks** as the absolute path to the `includes/hooks.inc` file (e.g. `/var/www/redcap/xman/includes/hooks.inc`), and save
 
 ## Getting started
 In order to create an extension, you need to add a new folder to `xman/extensions` directory (e.g. `xman/extensions/test`).
@@ -164,6 +164,8 @@ Obs.: of course, you can also create .php files to be directly accessed within y
 - The page will be available even if your extension is disabled
 
 ## Performing updates
-If your extension needs some db adjustments after a code update, you might implement a `hook_update_N()` (check [New hooks available](#new-hooks-available) section to know how to do that).
+If in the middle of way your extension needs some database adjustments, or if you need to run a version update script, XMan provides a mechanism - called  `hook_xman_update_N()` - to do these things inside your extension (check [this section](#hook_xman_update_n) to know how it works).
 
-After implementing your update function, go to **Control Center > Extensions Manager (Xman)**. Then you should see your update listed at "Available updates" section.
+After implementing your update function, you should see at  **Control Center > Extensions Manager (Xman)** an "Available updates" section, where you are able to see a list of all pending updates, and execute them.
+
+This way, everytime an user of your extension updates the code, this person will be able to check for updates and run them without any external or special procedure.
