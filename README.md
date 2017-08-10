@@ -8,7 +8,7 @@ It is based on [Drupal 7 modules architecture](https://www.drupal.org/docs/7/cre
 
 ## Installation
 - Download XMan and drop `xman` folder in your REDCap root
-- Run `install.sql` against your database
+- Run `install.sql` against your REDCap database
 - Move `.htaccess` file to the REDCap root
 - Go to **Control Center > General Configuration**, set **REDCap Hooks** as the absolute path to the `includes/hooks.inc` file (e.g. `/var/www/redcap/xman/includes/hooks.inc`), and save
 
@@ -52,7 +52,7 @@ function test_redcap_every_page_top($project_id) {
  * Plugin example.
  */
  function test_xman_plugins() {
-     return array('Test' => 'test_page');
+     return array('Test.php' => 'test_page');
  }
  
  /**
@@ -63,7 +63,7 @@ function test_redcap_every_page_top($project_id) {
  }
 ```
 
-The code above displays a "Test!" popup on every page. It also creates a new page at `/redcap/Test` that displays the same message.
+The code above displays a "Test!" popup on every page. It also creates a new page at `/redcap/Test.php` that displays the same message (note that `Test.php` is not an actual file, it is just a path alias).
 
 See details about [hooks](#new-hooks-available) and [plugins](#how-to-create-plugins-from-an-extension) implementation on the next sections.
 
@@ -109,7 +109,7 @@ You may manage extensions by accessing **Control Center > Extension Manager (XMa
 
 If you followed the example from the previous section, you might see a "Test" extension on the list. After enabling it, a "Test!" alert will pop up on every page you access (except on pages within the project scope, because this extension is not set as global on .info file).
 
-You may also access the plugin page at `/redcap/Test`, which also displays a "Test!" message.
+You may also access the plugin page at `/redcap/Test.php`, which also displays a "Test!" message.
 
 To enable your extension on a given project, access your project main page, and then click on **Extension Manager (XMan)**. This page is analogous the previous one at the Control Center. After enabling "Test" for the given project, now you should see the popup again, this time in the project context.
 
