@@ -29,7 +29,7 @@ The .info file is a JSON that contains basic info about your extension. Example:
     "description": "Prints a test message on every page.",
     "version": "1.0",
     "global": 0,
-    "authors": "Joe Doe <example@example.com>"
+    "project_url": "http://www.example.com/"
 }
 ```
 
@@ -171,7 +171,7 @@ After implementing your update function, you should see at  **Control Center > E
 This way, everytime an user of your extension updates the code, this person will be able to check for updates and run them without any external or special procedure.
 
 ## Handling third-party libraries via Composer
-If your XMan extension needs third-party PHP libraries, you don't need to include tons of external code in your extension repository, neither adding these libraries into your REDCap application manually. Instead, you can just require your dependencies by creating a `composer.json` file (see [Composer documentation](https://getcomposer.org/doc/) for further details).
+If your XMan extension needs third-party PHP libraries, you don't need to include external code in your extension repository, neither adding these libraries into your REDCap application manually. Instead, you can just require your dependencies by creating a `composer.json` file (see [Composer documentation](https://getcomposer.org/doc/) for further details).
 
 Before proceeding with this approach, you need to make sure that the required libraries are published on the [Packagist](https://packagist.org/).
 

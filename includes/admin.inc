@@ -90,7 +90,7 @@ function xman_form($extensions, $project_id = null, $include_update_form = true)
         elseif ($include_update_form && $_POST['form_type'] == 'update') {
             $msg = 'The updates have been applied successfully.';
             foreach (xman_get_available_updates() as $name => $updates) {
-                if (!empty($_POST[$name]) && !xman_update_extension($name, $updates)) {
+                if (!empty($_POST[$name]) && !xman_update_extension($name, array_keys($updates))) {
                     $msg = 'An error has ocurred. Please try again or contact site administration.';
                     $class = 'red';
                     $icon = 'cross';
@@ -116,7 +116,7 @@ function xman_form($extensions, $project_id = null, $include_update_form = true)
                     <th>Type</th>
                 <?php endif; ?>
                 <th>Version</th>
-                <th>Authors</th>
+                <th>Project link</th>
             </tr>
             <?php foreach ($extensions as $name => $info): ?>
                 <tr>
@@ -130,7 +130,11 @@ function xman_form($extensions, $project_id = null, $include_update_form = true)
                         <td><?php print empty($info['global']) ? 'Project' : 'Global'; ?></td>
                     <?php endif; ?>
                     <td><?php print empty($info['version']) ? '-' : $info['version']; ?></td>
-                    <td><?php print empty($info['authors']) ? '-' : htmlspecialchars($info['authors']); ?></td>
+                    <td>
+                        <?php if ($info['project_url']): ?>
+                            <a href="<?php print $info['project_url']; ?>"><?php print $info['project_url']; ?></a>
+                        <?php else: ?>-<?php endif; ?>
+                    </td>
                 </tr>
             <?php endforeach; ?>
         </table>

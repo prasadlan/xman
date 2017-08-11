@@ -224,7 +224,7 @@ function xman_update_extension($name, $updates = null) {
                 return true;
             }
 
-            $updates = $updates[$name];
+            $updates = array_keys($updates[$name]);
         }
 
         foreach ($updates as $version) {
