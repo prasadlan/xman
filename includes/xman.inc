@@ -4,7 +4,9 @@
  * XMan API file.
  */
 
-define('APP_PATH_EXTENSIONS', APP_PATH_DOCROOT . '../xman/extensions/');
+define('XMAN_ROOT', APP_PATH_DOCROOT . '../xman/');
+define('XMAN_EXTENSIONS_PATH', XMAN_ROOT . 'extensions/');
+
 include_once 'admin.inc';
 
 /**
@@ -49,7 +51,7 @@ function xman_set_menu_item($path) {
  */
 function xman_load_extensions($project_id = null, $type = 'extension') {
     foreach (xman_get_enabled_extensions($project_id) as $name => $extension) {
-        $path = APP_PATH_EXTENSIONS . $name . '/' . $name . '.' . $type;
+        $path = XMAN_EXTENSIONS_PATH . $name . '/' . $name . '.' . $type;
         if (file_exists($path)) {
             require_once $path;
         }
@@ -425,12 +427,12 @@ function xman_get_extensions() {
     }
 
     $extensions = array();
-    foreach (scandir(APP_PATH_EXTENSIONS) as $name) {
-        if (strpos($name, '.') === 0 | !is_dir(APP_PATH_EXTENSIONS . $name)) {
+    foreach (scandir(XMAN_EXTENSIONS_PATH) as $name) {
+        if (strpos($name, '.') === 0 | !is_dir(XMAN_EXTENSIONS_PATH . $name)) {
             continue;
         }
 
-        $path = APP_PATH_EXTENSIONS . $name . '/' . $name . '.info';
+        $path = XMAN_EXTENSIONS_PATH . $name . '/' . $name . '.info';
         if (!file_exists($path)) {
             continue;
         }

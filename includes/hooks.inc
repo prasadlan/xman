@@ -5,6 +5,7 @@
  */
 
 require_once 'xman.inc';
+include_once XMAN_ROOT . 'vendor/autoload.php';
 
 /**
  * Invokes redcap_add_edit_records_page hooks.

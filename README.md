@@ -169,3 +169,10 @@ If in the middle of way your extension needs some database adjustments, or if yo
 After implementing your update function, you should see at  **Control Center > Extensions Manager (Xman)** an "Available updates" section, where you are able to see a list of all pending updates, and execute them.
 
 This way, everytime an user of your extension updates the code, this person will be able to check for updates and run them without any external or special procedure.
+
+## Handling third-party libraries via Composer
+If your extension needs third-party software, you don't need to bring tons of external code inside your project folder.
+
+XMan root folder contains a "parent" `composer.json` file that detects and includes the "child" `composer.json` provided your extension. Thus, once you install the "parent" one, all libraries required by your extensions will be set up. Also, you don't need to include libraries during your code execution - XMan autoloads them.
+
+See [Composer documentation](#https://getcomposer.org/doc/) to learn how to install Composer and how manage dependencies with it.
