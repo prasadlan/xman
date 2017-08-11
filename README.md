@@ -175,4 +175,4 @@ If your extension needs third-party software, you don't need to bring tons of ex
 
 XMan root folder contains a "parent" `composer.json` file that detects and includes the "child" `composer.json` provided your extension. Thus, once you install the "parent" one, all libraries required by your extensions will be set up. Also, you don't need to include libraries during your code execution - XMan autoloads them.
 
-See [Composer documentation](#https://getcomposer.org/doc/) to learn how to install Composer and how manage dependencies with it.
+See [Composer documentation](https://getcomposer.org/doc/) to learn how to install Composer and how manage dependencies with it.
