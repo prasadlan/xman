@@ -171,8 +171,8 @@ After implementing your update function, you should see at  **Control Center > E
 This way, everytime an user of your extension updates the code, this person will be able to check for updates and run them without any external or special procedure.
 
 ## Handling third-party libraries via Composer
-If your extension needs third-party software, you don't need to bring tons of external code inside your project folder.
+If your XMan extension needs third-party PHP libraries, you don't need to include tons of external code in your extension repository, neither adding these libraries into your REDCap application manually. Instead, you can just require your dependencies by creating a `composer.json` file (see [Composer documentation](https://getcomposer.org/doc/) for further details).
 
-XMan root folder contains a "parent" `composer.json` file that detects and includes the "child" `composer.json` provided your extension. Thus, once you install the "parent" one, all libraries required by your extensions will be set up. Also, you don't need to include libraries during your code execution - XMan autoloads them.
+Before proceeding with this approach, you need to make sure that the required libraries are published on the [Packagist](https://packagist.org/).
 
-See [Composer documentation](https://getcomposer.org/doc/) to learn how to install Composer and how manage dependencies with it.
+XMan root folder contains a "parent" `composer.json` file that detects and includes the "children" ones provided by your extensions. Thus, once you install the "parent" one, all libraries required by your extensions will be set up. Also, you don't need to include libraries during your code execution - XMan autoloads them.
