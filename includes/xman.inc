@@ -10,7 +10,7 @@ define('XMAN_EXTENSIONS_PATH', XMAN_ROOT . 'extensions/');
 include_once 'admin.inc';
 
 /**
- * Gets all available XMan plugins().
+ * Gets all available XMan plugins.
  *
  * @param int $project_id
  *   The project ID.
@@ -196,7 +196,7 @@ function xman_disable_extensions($names, $project_id = null) {
  */
 function xman_update_all() {
     foreach (xman_get_available_updates() as $name => $updates) {
-        if (!xman_update_extension($name, $updates)) {
+        if (!xman_update_extension($name, array_keys($updates))) {
             return false;
         }
     }
@@ -389,7 +389,7 @@ function xman_get_enabled_extensions($project_id = null, $sort = true) {
         $aux = array();
 
         foreach ($extensions as $name => $extension) {
-            if (!empty($extension['projects'][$project_id])) {
+            if (!empty($extension['global']) || !empty($extension['projects'][$project_id])) {
                 $aux[$name] = $extension;
             }
         }
